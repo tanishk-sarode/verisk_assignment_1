@@ -1,7 +1,10 @@
 from datetime import datetime
-from threading import Lock
+from threading import Lock, Thread
 from enum import Enum
 import pprint
+import concurrent.futures 
+import time
+import random
 
 
 class Status(Enum):
@@ -63,7 +66,9 @@ class TaskManager:
         self.users[user_id] = User(user_id, name)
 
     def create_task(self, title, description, due_date, priority, owner_id):
-        with self.lock:
+        print(f"Task {self._task_counter}:{title} started ")
+        self.lock.acquire()
+        try:
             self._task_counter += 1
             task = Task(
                 task_id=self._task_counter,
@@ -74,7 +79,25 @@ class TaskManager:
             )
             self.tasks[self._task_counter] = task
             self.users[owner_id].add_task(task)
+            self.lock.release()
+        
+        except KeyError:
+            self.lock.release()
+            print(f"User {owner_id} Not Found")
+        
+        except Exception as e:
+            self.lock.release()
+            raise Exception(f"Error: {e}")
+        else:
+            time.sleep(random.randint(0,3))
+            print(f"Task {self._task_counter}:{title} created ")
             return task
+        return 
+
+
+            # time.sleep(random.randint(0,5))
+            
+            
 
     def assign_task(self, task_id, user_id):
         with self.lock:
@@ -82,6 +105,8 @@ class TaskManager:
             if task:
                 task.assigned_to = user_id
                 self.users[user_id].add_task(task)
+                # time.sleep(random.randint(0,5))
+                print(f"task {task.title} assigned to user {user_id}")
 
     def update_task(self, task_id, **updates):
         with self.lock:
@@ -114,17 +139,47 @@ if __name__ == "__main__":
     manager.create_user(1, "Tanishk")
     manager.create_user(2, "Vashit")
 
-    task = manager.create_task(
-        title="Assignment-1",
-        description="Complete the assignment on week1 and week2",
-        due_date=datetime(2026, 1, 13),
-        priority=Priority.HIGH,
-        owner_id=1
-    )
+    tasks = {
+        "task1" : {
+            "title" : "Assignment-1",
+            "description" : "Complete the assignment on week1 and week2",
+            "due_date" :datetime(2026, 1, 13),
+            "priority" : Priority.HIGH,
+            "owner_id" : 1
+        },
+        "task2" : {
+            "title" : "Assignment-2",
+            "description" : "Complete the assignment on week3",
+            "due_date" :datetime(2026, 1, 20),
+            "priority" : Priority.HIGH,
+            "owner_id" : 1
+        },
+        "task3" : {
+            "title" : "Assignment-3",
+            "description" : "Complete the assignment on week4",
+            "due_date" :datetime(2026, 1, 27),
+            "priority" : Priority.HIGH,
+            "owner_id" : 1
+        }
 
-    manager.assign_task(task.task_id, 2)
-    manager.update_task(task.task_id, status=Status.IN_PROGRESS)
-    task.mark_completed()
+    }
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        created_taskes = [executor.submit(manager.create_task, task["title"], task["description"], task["due_date"], task["priority"], task["owner_id"]) for _, task in tasks.items()]
+        # for f in concurrent.futures.as_completed(created_taskes):
+        #     print(f.result())
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        assigned_task = [executor.submit(manager.assign_task, task.result().task_id, 2) for task in concurrent.futures.as_completed(created_taskes)]
+    
+    concurrent.futures.wait(assigned_task)
+    print("Program completed")
+
+    
+
+
+    # manager.update_task(task.task_id, status=Status.IN_PROGRESS)
+    # task.mark_completed()
 
     # history = manager.get_task_history(2)
     # print([t.title for t in history])
