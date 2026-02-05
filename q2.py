@@ -1,12 +1,3 @@
-# You have 5 JSON config files in S3. You need to:
-# •	Download all files
-# •	Merge configurations
-# •	Detect conflicts
-# •	Upload consolidated file to S3
-# How would you handle concurrent merging? What validation would you use?
-
-
-
 import boto3
 import json
 import pprint
