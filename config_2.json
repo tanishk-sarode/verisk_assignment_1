@@ -1,0 +1,25 @@
+{
+    "service": {
+        "name": "auth",
+        "enabled": true,
+        "timeout": 60
+    },
+    "database": {
+        "host": "localhost",
+        "port": "5432",
+        "retries": 4
+    },
+    "features": {
+        "beta": true,
+        "flags": [
+            "hj4q",
+            "dCN2"
+        ]
+    },
+    "limits": {
+        "cpu": 2,
+        "memory": "1Gi"
+    },
+    "version": "1.0",
+    "owner": "team-b"
+}

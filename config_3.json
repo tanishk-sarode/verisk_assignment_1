@@ -1,0 +1,25 @@
+{
+    "service": {
+        "name": "billing",
+        "enabled": false,
+        "timeout": "30"
+    },
+    "database": {
+        "host": "localhost",
+        "port": "5432",
+        "retries": 4
+    },
+    "features": {
+        "beta": false,
+        "flags": [
+            "hWpP",
+            "hcZN"
+        ]
+    },
+    "limits": {
+        "cpu": 1,
+        "memory": "512Mi"
+    },
+    "version": "1.0",
+    "owner": "team-a"
+}
