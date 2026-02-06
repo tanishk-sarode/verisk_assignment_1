@@ -1,3 +1,12 @@
+# You have 5 JSON config files in S3. You need to:
+# •	Download all files
+# •	Merge configurations
+# •	Detect conflicts
+# •	Upload consolidated file to S3
+# How would you handle concurrent merging? What validation would you use?
+
+
+
 import boto3
 import json
 import pprint
@@ -33,11 +42,11 @@ def download_files():
             future.result() 
 
 
-def merge_dicts(dicts):
+def merge(dicts):
     merged = {}
     conflicts = {}
 
-    def deep_merge(target, source, path=""):
+    def merge_dicts(target, source, path=""):
         for key, value in source.items():
             current_path = f"{path}.{key}" if path else key
 
@@ -47,14 +56,14 @@ def merge_dicts(dicts):
                 existing = target[key]
 
                 if isinstance(existing, dict) and isinstance(value, dict):
-                    deep_merge(existing, value, current_path)
+                    merge_dicts(existing, value, current_path)
                 elif existing == value:
                     continue
                 else:
                     conflicts[current_path] = (existing, value)
 
     for d in dicts:
-        deep_merge(merged, d)
+        merge_dicts(merged, d)
 
     return merged, conflicts
 
@@ -85,7 +94,7 @@ if __name__ == "__main__":
     configs = load_configs()
 
     # Merge
-    merged, conflicts = merge_dicts(configs)
+    merged, conflicts = merge(configs)
 
     print("\nConflicts Detected:")
     pprint.pprint(conflicts)
